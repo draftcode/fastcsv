@@ -219,7 +219,7 @@ Writer_writecell(Writer *self, PyObject *cell,
     }
     return 1;
   } else {
-    cellstr = PyUnicode_FromObject(cell);
+    cellstr = PyObject_Unicode(cell);
     if (!cellstr) {
       PyErr_SetString(PyExc_ValueError, "cell value is not unicode");
       goto error_exit;
