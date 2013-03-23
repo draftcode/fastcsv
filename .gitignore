@@ -1,0 +1,7 @@
+*.so
+build/
+env/
+fastcsv.egg-info/
+*.pyc
+*.pyd
+doc/_build/
