@@ -5,6 +5,9 @@ fastcsv
 fastcsv is a module that treats CSV files. Its reading/writing speed is faster
 than standard csv module.
 
+:Source: https://github.com/draftcode/fastcsv
+:PyPI: https://pypi.python.org/pypi/fastcsv
+
 .. toctree::
    :maxdepth: 1
 

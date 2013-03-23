@@ -11,6 +11,7 @@ setup(
                  'Topic :: Text Processing'],
     author='Masaya SUZUKI',
     author_email='draftcode@gmail.com',
+    url='https://github.com/draftcode/fastcsv',
     ext_modules=[Extension('_fastcsv',
                            sources=['_fastcsv.c',
                                     '_fastcsv_reader.c',
