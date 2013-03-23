@@ -4,7 +4,7 @@ from setuptools import setup, Extension
 
 setup(
     name='fastcsv',
-    version='0.1.0',
+    version='0.1.1',
     description='fastcsv',
     classifiers=['Development Status :: 3 - Alpha',
                  'License :: OSI Approved :: BSD License',
