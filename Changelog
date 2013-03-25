@@ -1,0 +1,5 @@
+2013-03-25  Masaya SUZUKI <draftcode@gmail.com>
+
+	* _fastcsv_writer.c: Fix issue #1. Extra flush call writes buffer
+	twice.
+	* _fastcsv_writer.c: Fix issue #2. Segfault on close.
