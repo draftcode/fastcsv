@@ -136,6 +136,7 @@ Writer_flush_internal(Writer *self) {
       return 0;
     }
     Py_DECREF(ret);
+    self->writebuf_start = 0;
   }
   return 1;
 }
@@ -192,7 +193,6 @@ Writer_writestr(Writer *self, PyObject *str) {
   while (i != size) {
     if (self->writebuf_start == self->writebuf_cap) {
       Writer_flush_internal(self);
-      self->writebuf_start = 0;
     }
 
     self->writebuf[(self->writebuf_start)++] = buf[i++];
