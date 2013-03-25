@@ -113,6 +113,15 @@ class WriterTest(unittest.TestCase):
         writer.flush()
         self.assertEqual(out.getvalue(), '""\r\n')
 
+    def it_does_do_nothing_with_extra_flush(self):
+        out = TestIO()
+        writer = fastcsv.Writer(out)
+        writer.writerow([None])
+        self.assertEqual(out.getvalue(), '')
+        writer.flush()
+        writer.flush()
+        self.assertEqual(out.getvalue(), '""\r\n')
+
     def it_replaces_dquote(self):
         out = TestIO()
         with fastcsv.Writer(out) as writer:
