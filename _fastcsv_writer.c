@@ -176,6 +176,9 @@ Writer___exit__(Writer *self, PyObject *args) {
   Writer_flush_internal(self);
   if (PyObject_HasAttrString(self->fileobj, "close")) {
     PyObject *ret = PyObject_CallMethod(self->fileobj, "close", NULL);
+    if (!ret) {
+      return NULL;
+    }
     Py_DECREF(ret);
   }
   Py_RETURN_NONE;
