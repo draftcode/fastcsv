@@ -207,6 +207,7 @@ Writer_writecell(Writer *self, PyObject *cell,
   unsigned char free_cellstr = 0;
   unsigned char free_replaced = 0;
   PyObject *cellstr = NULL;
+  PyObject *replaced = NULL;
 
   if (!first_cell && !Writer_writestr(self, comma_string))
     goto error_exit;
@@ -228,9 +229,7 @@ Writer_writecell(Writer *self, PyObject *cell,
   }
 
   if (need_escape && !Writer_writestr(self, quote_string)) goto error_exit;
-  PyObject *replaced = PyUnicode_Replace(cellstr,
-                                         quote_string, twoquote_string,
-                                         -1);
+  replaced = PyUnicode_Replace(cellstr, quote_string, twoquote_string, -1);
   if (!replaced) goto error_exit;
   free_replaced = 1;
   if (!Writer_writestr(self, replaced)) goto error_exit;
