@@ -44,6 +44,13 @@ class ReaderTest(unittest.TestCase):
         result = list(fastcsv.Reader(inp))
         self.assertEqual(result, expected)
 
+    def it_returns_a_row_even_if_the_buffer_runs_out_and_the_next_buffer_contains_lf(self):
+        # This test checks EOL_CONTINUE state treats lineendings.
+        inp = io.StringIO(('a' * 2000) + '\n', newline='')
+        expected = [['a' * 2000]]
+        result = list(fastcsv.Reader(inp))
+        self.assertEqual(result, expected)
+
 class NewlineTest(unittest.TestCase):
 
     def it_is_converted_in_io(self):

@@ -2,6 +2,8 @@
 
 	* _fastcsv_reader.c: Fix issue #3. Fail to detect lineendings when
 	they are on the edge of the buffer.
+	* _fastcsv_reader.c: Fix issue #4. Raise error when it reads a large
+	cell.
 
 2013-03-25  Masaya SUZUKI <draftcode@gmail.com>
 

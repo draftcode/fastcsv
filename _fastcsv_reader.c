@@ -405,6 +405,7 @@ Reader_iternext(Reader *self) {
             content_count = 0;
             CHECK_SIZE(self->cells, self->cell_cap, cell_count);
             self->cells[cell_count++] = cellstr;
+            if (break_reason == SEE_LINEENDING) goto return_row;
             if (break_reason == SEE_CR_EOL) skip_lf_if_exists = 1;
             state = EXPECT_CELL;
             break;
