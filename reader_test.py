@@ -38,6 +38,12 @@ class ReaderTest(unittest.TestCase):
         fastcsv.Reader(inp)
         self.assertFalse(inp.closed)
 
+    def it_detects_CRLF_at_the_end_of_buffer(self):
+        inp = io.StringIO(('a' * 1023) + '\r\n', newline='')
+        expected = [['a' * 1023]]
+        result = list(fastcsv.Reader(inp))
+        self.assertEqual(result, expected)
+
 class NewlineTest(unittest.TestCase):
 
     def it_is_converted_in_io(self):
