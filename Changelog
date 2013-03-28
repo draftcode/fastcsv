@@ -1,3 +1,8 @@
+2013-03-28  Masaya SUZUKI <draftcode@gmail.com>
+
+	* _fastcsv_reader.c: Fix issue #3. Fail to detect lineendings when
+	they are on the edge of the buffer.
+
 2013-03-25  Masaya SUZUKI <draftcode@gmail.com>
 
 	* _fastcsv_writer.c: Fix issue #1. Extra flush call writes buffer

@@ -172,6 +172,7 @@ typedef enum {
   SEE_LINEENDING,
   SEE_QUOTE,
   SEE_EOL,
+  SEE_CR_EOL,
 } BreakReason;
 
 /* Support function: Seek
@@ -203,9 +204,15 @@ Seek(Reader *self, PyObject **ppret, unsigned char skip_splitter,
     } else if (!contain_newline) {
       if ((self->newline_mode == UniversalNewline ||
            self->newline_mode == CRLF) &&
-          buf[curr] == '\r' && curr+1 < end && buf[curr+1] == '\n') {
-        reason = SEE_LINEENDING;
-        skip = 2;
+          buf[curr] == '\r' &&
+          ((curr+1 < end && buf[curr+1] == '\n') || curr+1 == end)) {
+        if (curr+1 < end) {
+          reason = SEE_LINEENDING;
+          skip = 2;
+        } else {
+          reason = SEE_CR_EOL;
+          skip = 1;
+        }
         break;
       } else if ((self->newline_mode == UniversalNewline ||
                   self->newline_mode == CR) &&
@@ -311,6 +318,7 @@ Reader_iternext(Reader *self) {
   Py_ssize_t cell_count, content_count;
   PyObject *ret = NULL;
   ReaderState state;
+  unsigned char skip_lf_if_exists = 0;
 
   cell_count = 0;
   content_count = 0;
@@ -331,8 +339,11 @@ Reader_iternext(Reader *self) {
                                                  self->read_arg,
                                                  NULL);
       if (self->readbuf == NULL || PyUnicode_GET_SIZE(self->readbuf) == 0) {
-        /* EOF or Error */
-        if (!PyErr_Occurred() && (cell_count != 0 || state == IN_QUOTE)) {
+        if (skip_lf_if_exists) {
+          /* If this flag be set, it expects skip \r char if exists. In this
+             case there is no character left, and a row should be returned. */
+          goto return_row;
+        } else if (!PyErr_Occurred() && (cell_count != 0 || state == IN_QUOTE)) {
           PyErr_SetString(PyExc_IOError, "unexpected end of data");
           Py_XDECREF(ret);
           ret = NULL;
@@ -340,6 +351,13 @@ Reader_iternext(Reader *self) {
         goto free_and_exit;
       }
       self->readbuf_start = 0;
+    }
+
+    if (skip_lf_if_exists) {
+      if (PyUnicode_AS_UNICODE(self->readbuf)[self->readbuf_start] == '\n') {
+        self->readbuf_start++;
+      }
+      goto return_row;
     }
 
     skip_splitter = (state == IN_QUOTE);
@@ -350,9 +368,11 @@ Reader_iternext(Reader *self) {
         switch (break_reason) {
           case SEE_SPLITTER:
           case SEE_LINEENDING:
+          case SEE_CR_EOL:
             CHECK_SIZE(self->cells, self->cell_cap, cell_count);
             self->cells[cell_count++] = cellstr;
             if (break_reason == SEE_LINEENDING) goto return_row;
+            if (break_reason == SEE_CR_EOL) skip_lf_if_exists = 1;
             break;
 
           case SEE_QUOTE:
@@ -372,10 +392,12 @@ Reader_iternext(Reader *self) {
             break;
         }
         break;
+
       case EOL_CONTINUE:
         switch (break_reason) {
           case SEE_SPLITTER:
           case SEE_LINEENDING:
+          case SEE_CR_EOL:
             CHECK_SIZE(self->contents, self->content_cap, content_count);
             self->contents[content_count++] = cellstr;
             cellstr = JoinAndClear(self->contents, content_count);
@@ -383,6 +405,7 @@ Reader_iternext(Reader *self) {
             content_count = 0;
             CHECK_SIZE(self->cells, self->cell_cap, cell_count);
             self->cells[cell_count++] = cellstr;
+            if (break_reason == SEE_CR_EOL) skip_lf_if_exists = 1;
             state = EXPECT_CELL;
             break;
 
@@ -401,11 +424,8 @@ Reader_iternext(Reader *self) {
       case IN_QUOTE:
         switch (break_reason) {
           case SEE_SPLITTER:
-            PyErr_SetString(PyExc_Exception, "programming error");
-            Py_DECREF(cellstr);
-            goto free_and_exit;
-
           case SEE_LINEENDING:
+          case SEE_CR_EOL:
             PyErr_SetString(PyExc_Exception, "programming error");
             Py_DECREF(cellstr);
             goto free_and_exit;
@@ -434,12 +454,14 @@ Reader_iternext(Reader *self) {
         switch (break_reason) {
           case SEE_SPLITTER:
           case SEE_LINEENDING:
+          case SEE_CR_EOL:
             cellstr = JoinAndClear(self->contents, content_count);
             if (!cellstr) goto free_and_exit;
             content_count = 0;
             CHECK_SIZE(self->cells, self->cell_cap, cell_count);
             self->cells[cell_count++] = cellstr;
             if (break_reason == SEE_LINEENDING) goto return_row;
+            if (break_reason == SEE_CR_EOL) skip_lf_if_exists = 1;
             state = EXPECT_CELL;
             break;
 
