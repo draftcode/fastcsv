@@ -5,3 +5,4 @@ fastcsv.egg-info/
 *.pyc
 *.pyd
 doc/_build/
+dist/
