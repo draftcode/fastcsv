@@ -32,6 +32,35 @@ static PyMethodDef _fastcsv_methods[] = {
   {NULL}
 };
 
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "_fastcsv",
+  NULL,
+  0,
+  _fastcsv_methods,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+};
+
+PyMODINIT_FUNC
+PyInit__fastcsv(void) {
+  if (PyType_Ready(&ReaderType) < 0) return NULL;
+  if (PyType_Ready(&WriterType) < 0) return NULL;
+
+  PyObject *m = PyModule_Create(&moduledef);
+  if (m == NULL) {
+    return NULL;
+  }
+  Py_INCREF(&ReaderType);
+  PyModule_AddObject(m, "Reader", (PyObject *)&ReaderType);
+  Py_INCREF(&WriterType);
+  PyModule_AddObject(m, "Writer", (PyObject *)&WriterType);
+  return m;
+}
+#else
 PyMODINIT_FUNC
 init_fastcsv(void) {
   if (PyType_Ready(&ReaderType) < 0) return;
@@ -47,4 +76,4 @@ init_fastcsv(void) {
     PyModule_AddObject(m, "Writer", (PyObject *)&WriterType);
   }
 }
-
+#endif

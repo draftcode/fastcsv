@@ -54,6 +54,10 @@ ParseNewlineMode(PyObject *newline, NewlineMode *newline_mode) {
     *newline_mode = UniversalNewline;
   } else {
     unsigned char free_newline = 0;
+#if PY_MAJOR_VERSION >= 3
+    // Do not do bytes to unicode conversion in Python3. We expect the caller to
+    // use unicode strings consistently in Python3.
+#else
     if (PyString_Check(newline)) {
       PyObject *decoded = PyUnicode_FromObject(newline);
       if (!decoded) {
@@ -63,6 +67,7 @@ ParseNewlineMode(PyObject *newline, NewlineMode *newline_mode) {
       free_newline = 1;
       newline = decoded;
     }
+#endif
     if (PyUnicode_Check(newline)) {
       if (PyUnicode_GET_SIZE(newline) == 1) {
         if (PyUnicode_AS_UNICODE(newline)[0] == '\r') {
@@ -109,9 +114,13 @@ Reader_init(Reader *self, PyObject *args, PyObject *kwds) {
   self->contents = PyMem_New(PyObject *, self->content_cap);
   if (!self->contents) goto error;
 
+#if PY_MAJOR_VERSION >= 3
+  self->read_string = PyUnicode_FromString("read");
+#else
   self->read_string = PyString_FromString("read");
+#endif
   if (!self->read_string) goto error;
-  self->read_arg = PyInt_FromLong(1024);
+  self->read_arg = PyLong_FromLong(1024);
   if (!self->read_arg) goto error;
 
   self->entered = 0;
@@ -502,8 +511,7 @@ static PyMethodDef Reader_methods[] = {
 };
 
 PyTypeObject ReaderType = {
-  PyObject_HEAD_INIT(NULL)
-  0,                             /* ob_size */
+  PyVarObject_HEAD_INIT(NULL, 0)
   "_fastcsv.Reader",             /* tp_name */
   sizeof(Reader),                /* tp_basicsize */
   0,                             /* tp_itemsize */
@@ -522,7 +530,13 @@ PyTypeObject ReaderType = {
   0,                             /* tp_getattro */
   0,                             /* tp_setattro */
   0,                             /* tp_as_buffer */
-  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER, /* tp_flags */
+  Py_TPFLAGS_DEFAULT
+#if PY_MAJOR_VERSION >= 3
+    // Py_TPFLAGS_HAVE_ITER is deprecated in Python3.
+#else
+    | Py_TPFLAGS_HAVE_ITER
+#endif
+    , /* tp_flags */
   "FastCSV Reader Object",       /* tp_doc */
   0,                             /* tp_traverse */
   0,                             /* tp_clear */

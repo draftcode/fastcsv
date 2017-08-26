@@ -57,6 +57,8 @@ class WriterTest(unittest.TestCase):
 
     def it_converts_non_unicode_to_unicode(self):
         class A(object):
+            def __str__(self):
+                return "A object"
             def __unicode__(self):
                 return "A object"
 
@@ -85,6 +87,8 @@ class WriterTest(unittest.TestCase):
 
     def it_raises_ValueError_if_a_cell_value_cannot_be_converted_to_unicode(self):
         class A(object):
+            def __str__(self):
+                raise Exception
             def __unicode__(self):
                 raise Exception
 
