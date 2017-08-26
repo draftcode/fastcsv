@@ -4,7 +4,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import __main__
 import os.path
 import re
-from unittest.loader import _CmpToKey
+import functools
 from setuptools.command.test import ScanningLoader
 
 class RegexpPrefixLoader(ScanningLoader):
@@ -18,9 +18,10 @@ class RegexpPrefixLoader(ScanningLoader):
             if not pattern: pattern = self.testMethodPattern
             return re.match(pattern, attrname) and \
                 hasattr(getattr(testCaseClass, attrname), '__call__')
-        testFnNames = filter(isTestMethod, dir(testCaseClass))
+        testFnNames = list(filter(isTestMethod, dir(testCaseClass)))
         if self.sortTestMethodsUsing:
-            testFnNames.sort(key=_CmpToKey(self.sortTestMethodsUsing))
+            testFnNames.sort(
+                key=functools.cmp_to_key(self.sortTestMethodsUsing))
         return testFnNames
 
 def load_tests(loader, tests, pattern):

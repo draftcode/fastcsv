@@ -223,7 +223,11 @@ Writer_writecell(Writer *self, PyObject *cell,
     }
     return 1;
   } else {
+#if PY_MAJOR_VERSION >= 3
+    cellstr = PyObject_Str(cell);
+#else
     cellstr = PyObject_Unicode(cell);
+#endif
     if (!cellstr) {
       PyErr_SetString(PyExc_ValueError, "cell value is not unicode");
       goto error_exit;
@@ -380,8 +384,7 @@ static PyMethodDef Writer_methods[] = {
 };
 
 PyTypeObject WriterType = {
-  PyObject_HEAD_INIT(NULL)
-  0,                          /* ob_size */
+  PyVarObject_HEAD_INIT(NULL, 0)
   "_fastcsv.Writer",          /* tp_name */
   sizeof(Writer),             /* tp_basicsize */
   0,                          /* tp_itemsize */
@@ -400,7 +403,13 @@ PyTypeObject WriterType = {
   0,                          /* tp_getattro */
   0,                          /* tp_setattro */
   0,                          /* tp_as_buffer */
-  Py_TPFLAGS_DEFAULT,         /* tp_flags */
+  Py_TPFLAGS_DEFAULT
+#if PY_MAJOR_VERSION >= 3
+    // Py_TPFLAGS_HAVE_ITER is deprecated in Python3.
+#else
+    | Py_TPFLAGS_HAVE_ITER
+#endif
+    , /* tp_flags */
   "FastCSV Writer Object",    /* tp_doc */
   0,                          /* tp_traverse */
   0,                          /* tp_clear */
